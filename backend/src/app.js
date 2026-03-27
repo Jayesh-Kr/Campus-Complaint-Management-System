@@ -11,6 +11,12 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', routes);
 
+app.get('/health',(req,res) => {
+    return res.json({
+        "status" : "healthy"
+    })
+})
+
 app.use(notFoundHandler);
 app.use(errorHandler);
 
