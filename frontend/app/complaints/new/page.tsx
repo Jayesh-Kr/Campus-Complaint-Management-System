@@ -121,7 +121,7 @@ export default function NewComplaintPage() {
                 >
                   <option value="" className="bg-[#141414]">Select Category</option>
                   {categories.map(cat => (
-                    <option key={cat.id} value={cat.id} className="bg-[#141414]">{cat.name}</option>
+                    <option key={cat.category_id} value={cat.category_id} className="bg-[#141414]">{cat.name}</option>
                   ))}
                 </select>
               </div>

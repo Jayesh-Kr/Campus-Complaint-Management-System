@@ -40,7 +40,7 @@ export default function ComplaintDetailPage() {
       setComplaint(compRes.data);
       setResponses(Array.isArray(respRes.data) ? respRes.data : respRes.data.data || []);
       setStatusUpdate(compRes.data.status);
-      setAssignStaffId(compRes.data.staff_id || "");
+      setAssignStaffId(compRes.data.staff_id ? String(compRes.data.staff_id) : "");
 
       if (user?.role === 'admin' || user?.role === 'staff') {
         const staffRes = await api.get("/staff");
@@ -85,7 +85,10 @@ export default function ComplaintDetailPage() {
 
   const handleAssign = async () => {
     try {
-      await api.patch(`/complaints/${id}/assign`, { staff_id: assignStaffId ? parseInt(assignStaffId) : null });
+      const normalizedStaffId = assignStaffId ? Number(assignStaffId) : null;
+      await api.patch(`/complaints/${id}/assign`, {
+        staff_id: Number.isInteger(normalizedStaffId) ? normalizedStaffId : null
+      });
       fetchData();
     } catch (err) {
       console.error("Failed to assign", err);
@@ -140,7 +143,7 @@ export default function ComplaintDetailPage() {
                   </div>
                   <CardTitle className="text-2xl mt-2">{complaint.title}</CardTitle>
                   <CardDescription className="mt-1">
-                    Submitted on {new Date(complaint.created_at).toLocaleString()}
+                    Submitted on {new Date(complaint.date_filed || complaint.created_at).toLocaleString()}
                   </CardDescription>
                 </div>
               </div>
@@ -164,13 +167,13 @@ export default function ComplaintDetailPage() {
               ) : (
                 <div className="space-y-4">
                   {responses.map((resp: any) => (
-                    <div key={resp.id} className={`p-4 rounded-lg flex flex-col ${resp.staff_id ? 'bg-neutral-800/50' : 'bg-neutral-900/40'}`}>
+                    <div key={resp.response_id || resp.id} className={`p-4 rounded-lg flex flex-col ${resp.staff_id ? 'bg-neutral-800/50' : 'bg-neutral-900/40'}`}>
                       <div className="flex justify-between items-start mb-2">
                         <span className="font-medium text-sm text-neutral-300">
                           {resp.staff_id ? 'Staff/Admin' : 'Student'}
                         </span>
                         <span className="text-xs text-neutral-500">
-                          {new Date(resp.created_at).toLocaleString()}
+                          {new Date(resp.date_responded || resp.created_at).toLocaleString()}
                         </span>
                       </div>
                       <p className="text-sm text-neutral-200 whitespace-pre-wrap">{resp.message}</p>
@@ -245,12 +248,14 @@ export default function ComplaintDetailPage() {
               </div>
               <div>
                 <span className="text-neutral-500 block mb-1">Category</span>
-                <span className="font-medium text-neutral-200">{complaint.category?.name || `ID: ${complaint.category_id}`}</span>
+                <span className="font-medium text-neutral-200">{complaint.category?.name || complaint.category || `ID: ${complaint.category_id}`}</span>
               </div>
               <div>
                 <span className="text-neutral-500 block mb-1">Assigned Staff</span>
-                {complaint.staff_id ? (
-                  <span className="font-medium text-neutral-200">Staff ID: #{complaint.staff_id}</span>
+                {complaint.staff_id || complaint.assigned_staff ? (
+                  <span className="font-medium text-neutral-200">
+                    {complaint.assigned_staff || `Staff ID: #${complaint.staff_id}`}
+                  </span>
                 ) : (
                   <span className="text-neutral-500 italic">Unassigned</span>
                 )}
@@ -294,7 +299,7 @@ export default function ComplaintDetailPage() {
                       >
                         <option value="">Unassigned</option>
                         {staffList.map(s => (
-                          <option key={s.id} value={s.id}>{s.name} ({s.department})</option>
+                          <option key={s.staff_id} value={s.staff_id}>{s.name} ({s.department})</option>
                         ))}
                       </select>
                       <Button size="sm" onClick={handleAssign} variant="secondary">Assign</Button>

@@ -7,11 +7,43 @@ import api from "@/lib/api";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Loader2, TrendingUp, AlertOctagon, CheckCircle2, Clock, Users } from "lucide-react";
 
+interface StatusSummary {
+  status: string;
+  count?: number;
+  total?: number;
+  total_complaints?: number;
+}
+
+interface StaffPerformanceRow {
+  staff_id?: number;
+  staff_name?: string;
+  name?: string;
+  resolved_count?: number;
+}
+
+interface OpenComplaintRow {
+  complaint_id: number;
+  title: string;
+  status: string;
+  category: string;
+  student_name: string;
+  assigned_to: string;
+}
+
+interface ReportsStats {
+  status: StatusSummary[];
+  avgTime: {
+    avg_days_to_resolve: number | null;
+  };
+  open: OpenComplaintRow[];
+  staff: StaffPerformanceRow[];
+}
+
 export default function ReportsPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
-  const [stats, setStats] = useState<any>(null);
+  const [stats, setStats] = useState<ReportsStats | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -64,10 +96,10 @@ export default function ReportsPage() {
   }
 
   // Helper to extract value safely depending on typical count structures
-  const extractCount = (arr: any[], status: string) => {
+  const extractCount = (arr: StatusSummary[] | undefined, status: string) => {
     if (!Array.isArray(arr)) return 0;
-    const item = arr.find(x => x.status === status);
-    return item ? (item.count || item.total) : 0;
+    const item = arr.find((x) => x.status === status);
+    return item ? (item.count || item.total || item.total_complaints || 0) : 0;
   };
 
   const totalOpen = extractCount(stats?.status, 'open') + extractCount(stats?.status, 'in_progress') + extractCount(stats?.status, 'pending');
@@ -110,7 +142,9 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats?.avgTime?.[0]?.avg_time ? `${parseFloat(stats.avgTime[0].avg_time).toFixed(1)} hrs` : 'N/A'}
+              {stats?.avgTime?.avg_days_to_resolve !== null && stats?.avgTime?.avg_days_to_resolve !== undefined
+                ? `${Number(stats.avgTime.avg_days_to_resolve).toFixed(1)} days`
+                : 'N/A'}
             </div>
             <p className="text-xs text-neutral-500 mt-1">From open to closed</p>
           </CardContent>
@@ -135,11 +169,11 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats?.status?.map((item: any, i: number) => (
+              {stats?.status?.map((item, i: number) => (
                 <div key={i} className="flex items-center justify-between">
                   <span className="text-sm capitalize text-neutral-300">{item.status?.replace('_', ' ')}</span>
                   <span className="font-medium text-sm px-2 py-1 bg-neutral-800 rounded-md">
-                    {item.count || item.total || 0}
+                    {item.count || item.total || item.total_complaints || 0}
                   </span>
                 </div>
               ))}
@@ -153,7 +187,7 @@ export default function ReportsPage() {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {stats?.staff?.slice(0, 5).map((staff: any, i: number) => (
+              {stats?.staff?.slice(0, 5).map((staff, i: number) => (
                 <div key={i} className="flex items-center justify-between border-b border-neutral-800 pb-2 last:border-0 last:pb-0">
                   <div>
                     <p className="text-sm font-medium text-neutral-200">{staff.staff_name || staff.name || `Staff #${staff.staff_id}`}</p>
@@ -169,6 +203,33 @@ export default function ReportsPage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg">Open Complaints Dashboard</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {stats?.open?.length ? (
+              stats.open.map((item) => (
+                <div key={item.complaint_id} className="rounded-md border border-neutral-800 p-3">
+                  <div className="flex items-center justify-between gap-4">
+                    <p className="text-sm font-medium text-neutral-200">
+                      #{item.complaint_id} {item.title}
+                    </p>
+                    <span className="text-xs text-neutral-400">{item.status}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-neutral-500">
+                    {item.category} | {item.student_name} | Assigned: {item.assigned_to}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <p className="text-sm text-neutral-500 italic">No open complaints right now.</p>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

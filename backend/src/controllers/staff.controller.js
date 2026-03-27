@@ -1,5 +1,115 @@
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 import { query } from '../config/db.js';
+import env from '../config/env.js';
 import asyncHandler from '../utils/asyncHandler.js';
+
+const VALID_STAFF_ROLES = ['admin', 'staff'];
+
+const signStaffToken = (staff) => {
+  return jwt.sign(
+    {
+      staffId: staff.staff_id,
+      email: staff.email,
+      role: staff.role
+    },
+    env.jwtSecret,
+    { expiresIn: env.jwtExpiresIn }
+  );
+};
+
+const normalizeEmail = (email) => String(email || '').trim().toLowerCase();
+
+export const registerStaff = asyncHandler(async (req, res) => {
+  const {
+    name,
+    email,
+    phone = null,
+    department = null,
+    password,
+    role = 'staff'
+  } = req.body;
+
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'name, email, and password are required' });
+  }
+
+  if (!VALID_STAFF_ROLES.includes(role)) {
+    return res.status(400).json({ message: 'Invalid role value' });
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+  const existing = await query('SELECT staff_id FROM staff WHERE email = ?', [normalizedEmail]);
+  if (existing.length) {
+    return res.status(409).json({ message: 'Email is already registered' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+  const result = await query(
+    `INSERT INTO staff (name, email, phone, department, password_hash, role)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [name, normalizedEmail, phone, department, passwordHash, role]
+  );
+
+  const staff = {
+    staff_id: result.insertId,
+    name,
+    email: normalizedEmail,
+    phone,
+    department,
+    role
+  };
+
+  return res.status(201).json({
+    message: 'Staff registered successfully',
+    staff,
+    token: signStaffToken(staff)
+  });
+});
+
+export const loginStaff = asyncHandler(async (req, res) => {
+  const { email, password } = req.body;
+
+  if (!email || !password) {
+    return res.status(400).json({ message: 'email and password are required' });
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+
+  const rows = await query(
+    `SELECT staff_id, name, email, phone, department, role, password_hash
+     FROM staff
+     WHERE email = ?`,
+    [normalizedEmail]
+  );
+
+  if (!rows.length) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+
+  const staff = rows[0];
+  if (!staff.password_hash) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+  const isPasswordValid = await bcrypt.compare(password, staff.password_hash);
+
+  if (!isPasswordValid) {
+    return res.status(401).json({ message: 'Invalid credentials' });
+  }
+
+  return res.json({
+    message: 'Login successful',
+    staff: {
+      staff_id: staff.staff_id,
+      name: staff.name,
+      email: staff.email,
+      phone: staff.phone,
+      department: staff.department,
+      role: staff.role
+    },
+    token: signStaffToken(staff)
+  });
+});
 
 export const listStaff = asyncHandler(async (req, res) => {
   const rows = await query(
@@ -28,15 +138,35 @@ export const getStaffById = asyncHandler(async (req, res) => {
 });
 
 export const createStaff = asyncHandler(async (req, res) => {
-  const { name, email, phone = null, department = null, role = 'staff' } = req.body;
+  const {
+    name,
+    email,
+    phone = null,
+    department = null,
+    role = 'staff',
+    password
+  } = req.body;
 
-  if (!name || !email) {
-    return res.status(400).json({ message: 'name and email are required' });
+  if (!name || !email || !password) {
+    return res.status(400).json({ message: 'name, email, and password are required' });
   }
 
+  if (!VALID_STAFF_ROLES.includes(role)) {
+    return res.status(400).json({ message: 'Invalid role value' });
+  }
+
+  const normalizedEmail = normalizeEmail(email);
+  const existing = await query('SELECT staff_id FROM staff WHERE email = ?', [normalizedEmail]);
+  if (existing.length) {
+    return res.status(409).json({ message: 'Email is already registered' });
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
   const result = await query(
-    'INSERT INTO staff (name, email, phone, department, role) VALUES (?, ?, ?, ?, ?)',
-    [name, email, phone, department, role]
+    `INSERT INTO staff (name, email, phone, department, password_hash, role)
+     VALUES (?, ?, ?, ?, ?, ?)`,
+    [name, normalizedEmail, phone, department, passwordHash, role]
   );
 
   return res.status(201).json({
@@ -47,10 +177,21 @@ export const createStaff = asyncHandler(async (req, res) => {
 
 export const updateStaff = asyncHandler(async (req, res) => {
   const staffId = Number(req.params.id);
-  const { name, email, phone, department, role } = req.body;
+  const { name, email, phone, department, role, password } = req.body;
 
-  if (name === undefined && email === undefined && phone === undefined && department === undefined && role === undefined) {
+  if (
+    name === undefined &&
+    email === undefined &&
+    phone === undefined &&
+    department === undefined &&
+    role === undefined &&
+    password === undefined
+  ) {
     return res.status(400).json({ message: 'At least one field is required' });
+  }
+
+  if (role !== undefined && !VALID_STAFF_ROLES.includes(role)) {
+    return res.status(400).json({ message: 'Invalid role value' });
   }
 
   const fields = [];
@@ -62,7 +203,7 @@ export const updateStaff = asyncHandler(async (req, res) => {
   }
   if (email !== undefined) {
     fields.push('email = ?');
-    values.push(email);
+    values.push(normalizeEmail(email));
   }
   if (phone !== undefined) {
     fields.push('phone = ?');
@@ -75,6 +216,11 @@ export const updateStaff = asyncHandler(async (req, res) => {
   if (role !== undefined) {
     fields.push('role = ?');
     values.push(role);
+  }
+  if (password !== undefined) {
+    const passwordHash = await bcrypt.hash(password, 10);
+    fields.push('password_hash = ?');
+    values.push(passwordHash);
   }
 
   values.push(staffId);

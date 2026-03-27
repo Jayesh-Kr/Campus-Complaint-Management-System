@@ -7,6 +7,18 @@ CREATE TABLE IF NOT EXISTS category (
     description   TEXT
 );
 
+INSERT INTO category (name, description) VALUES
+('Academic', 'Teaching, curriculum, classroom, and faculty-related concerns'),
+('Infrastructure', 'Buildings, classrooms, furniture, and campus facilities issues'),
+('IT Support', 'Internet, portal, software, and lab systems related issues'),
+('Hostel', 'Hostel room, maintenance, and amenities related concerns'),
+('Transport', 'Bus routes, timing, safety, and transportation problems'),
+('Sanitation', 'Cleanliness, washrooms, waste management, and hygiene concerns'),
+('Security', 'Campus security, safety incidents, and access control concerns'),
+('Administration', 'Office process, certificate, records, and administrative delays')
+ON DUPLICATE KEY UPDATE
+    description = VALUES(description);
+
 CREATE TABLE IF NOT EXISTS student (
     student_id    INT           AUTO_INCREMENT PRIMARY KEY,
     name          VARCHAR(150)  NOT NULL,
@@ -23,6 +35,7 @@ CREATE TABLE IF NOT EXISTS staff (
     email         VARCHAR(150)  NOT NULL UNIQUE,
     phone         VARCHAR(15),
     department    VARCHAR(100),
+    password_hash VARCHAR(255)  NOT NULL,
     role          ENUM('admin','staff') DEFAULT 'staff',
     created_at    DATETIME      DEFAULT CURRENT_TIMESTAMP
 );

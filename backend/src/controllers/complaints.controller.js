@@ -90,6 +90,7 @@ export const listComplaints = asyncHandler(async (req, res) => {
   const offset = (pageNo - 1) * pageSize;
 
   const whereClause = where.length ? `WHERE ${where.join(' AND ')}` : '';
+  const paginationClause = `LIMIT ${pageSize} OFFSET ${offset}`;
 
   const rows = await query(
     `SELECT
@@ -109,8 +110,8 @@ export const listComplaints = asyncHandler(async (req, res) => {
     LEFT JOIN staff st ON c.staff_id = st.staff_id
     ${whereClause}
     ORDER BY c.date_filed DESC
-    LIMIT ? OFFSET ?`,
-    [...params, pageSize, offset]
+    ${paginationClause}`,
+    params
   );
 
   return res.json({
@@ -242,23 +243,44 @@ export const assignComplaint = asyncHandler(async (req, res) => {
   const complaintId = Number(req.params.id);
   const { staff_id } = req.body;
 
-  if (!staff_id) {
+  if (staff_id === undefined) {
     return res.status(400).json({ message: 'staff_id is required' });
+  }
+
+  let normalizedStaffId = null;
+
+  if (staff_id !== null && staff_id !== '') {
+    normalizedStaffId = Number(staff_id);
+
+    if (!Number.isInteger(normalizedStaffId) || normalizedStaffId <= 0) {
+      return res.status(400).json({ message: 'staff_id must be a valid positive number or null' });
+    }
+
+    const staffRows = await query('SELECT staff_id FROM staff WHERE staff_id = ?', [normalizedStaffId]);
+    if (!staffRows.length) {
+      return res.status(404).json({ message: 'Staff not found' });
+    }
   }
 
   const result = await query(
     `UPDATE complaint
      SET staff_id = ?,
-         status = CASE WHEN status = 'pending' THEN 'open' ELSE status END
+         status = CASE
+                    WHEN ? IS NOT NULL AND status = 'pending' THEN 'open'
+                    WHEN ? IS NULL AND status = 'open' THEN 'pending'
+                    ELSE status
+                  END
      WHERE complaint_id = ?`,
-    [staff_id, complaintId]
+    [normalizedStaffId, normalizedStaffId, normalizedStaffId, complaintId]
   );
 
   if (!result.affectedRows) {
     return res.status(404).json({ message: 'Complaint not found' });
   }
 
-  return res.json({ message: 'Complaint assigned successfully' });
+  return res.json({
+    message: normalizedStaffId ? 'Complaint assigned successfully' : 'Complaint unassigned successfully'
+  });
 });
 
 export const deleteComplaint = asyncHandler(async (req, res) => {

@@ -12,11 +12,20 @@ import Link from "next/link";
 import { Plus, Search, Filter, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
+interface ComplaintItem {
+  complaint_id: number;
+  title: string;
+  status?: string;
+  priority?: string;
+  date_filed?: string;
+  created_at?: string;
+}
+
 export default function DashboardPage() {
   const { user, loading: authLoading } = useAuth();
   const router = useRouter();
   
-  const [complaints, setComplaints] = useState<any[]>([]);
+  const [complaints, setComplaints] = useState<ComplaintItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
 
@@ -34,8 +43,6 @@ export default function DashboardPage() {
         let endpoint = "/complaints";
         if (user.role === "student") {
           endpoint = `/students/${user.id}/complaints`;
-        } else if (user.role === "staff") {
-          endpoint = `/staff/${user.id}/complaints`;
         }
         
         const { data } = await api.get(endpoint);
@@ -59,9 +66,9 @@ export default function DashboardPage() {
     );
   }
 
-  const filteredComplaints = complaints.filter(c => 
+  const filteredComplaints = complaints.filter((c) => 
     c.title?.toLowerCase().includes(search.toLowerCase()) || 
-    c.id?.toString().includes(search)
+    c.complaint_id?.toString().includes(search)
   );
 
   return (
@@ -110,7 +117,7 @@ export default function DashboardPage() {
           </Card>
         ) : (
           filteredComplaints.map((complaint) => (
-            <Link key={complaint.id} href={`/complaints/${complaint.id}`}>
+            <Link key={complaint.complaint_id} href={`/complaints/${complaint.complaint_id}`}>
               <Card className="hover:border-neutral-700 transition-colors cursor-pointer group">
                 <CardHeader className="py-4">
                   <div className="flex justify-between items-start gap-4">
@@ -119,16 +126,16 @@ export default function DashboardPage() {
                         {complaint.title}
                       </CardTitle>
                       <CardDescription className="mt-1 flex items-center gap-3">
-                        <span>#{complaint.id}</span>
+                        <span>#{complaint.complaint_id}</span>
                         <span>•</span>
-                        <span>{new Date(complaint.created_at || Date.now()).toLocaleDateString()}</span>
+                        <span>{new Date(complaint.date_filed || complaint.created_at || Date.now()).toLocaleDateString()}</span>
                       </CardDescription>
                     </div>
                     <div className="flex gap-2 flex-wrap justify-end">
-                      <Badge variant={getPriorityBadgeVariant(complaint.priority)}>
+                      <Badge variant={getPriorityBadgeVariant(complaint.priority || 'low')}>
                         {formatStatus(complaint.priority || 'low')}
                       </Badge>
-                      <Badge variant={getStatusBadgeVariant(complaint.status)}>
+                      <Badge variant={getStatusBadgeVariant(complaint.status || 'pending')}>
                         {formatStatus(complaint.status || 'pending')}
                       </Badge>
                     </div>
