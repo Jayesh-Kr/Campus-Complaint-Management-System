@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -61,7 +61,7 @@ export default function DashboardPage() {
   if (authLoading || (loading && complaints.length === 0)) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-neutral-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -71,12 +71,20 @@ export default function DashboardPage() {
     c.complaint_id?.toString().includes(search)
   );
 
+  const formatComplaintDate = (dateValue?: string) => {
+    if (!dateValue) {
+      return "Date unavailable";
+    }
+
+    return new Date(dateValue).toLocaleDateString();
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-neutral-400 mt-1">Manage and track campus complaints.</p>
+          <p className="mt-1 text-muted-foreground">Manage and track campus complaints.</p>
         </div>
         {user?.role === "student" && (
           <Link href="/complaints/new">
@@ -90,7 +98,7 @@ export default function DashboardPage() {
 
       <div className="flex gap-4 items-center">
         <div className="relative flex-1 max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
           <Input 
             placeholder="Search complaints..." 
             className="pl-9"
@@ -107,7 +115,7 @@ export default function DashboardPage() {
         {filteredComplaints.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center h-48 text-center">
-              <p className="text-neutral-400 mb-2">No complaints found.</p>
+              <p className="mb-2 text-muted-foreground">No complaints found.</p>
               {user?.role === "student" && (
                 <Link href="/complaints/new">
                   <Button variant="outline" size="sm">Create your first complaint</Button>
@@ -118,17 +126,17 @@ export default function DashboardPage() {
         ) : (
           filteredComplaints.map((complaint) => (
             <Link key={complaint.complaint_id} href={`/complaints/${complaint.complaint_id}`}>
-              <Card className="hover:border-neutral-700 transition-colors cursor-pointer group">
+              <Card className="group cursor-pointer transition-colors hover:border-accent">
                 <CardHeader className="py-4">
                   <div className="flex justify-between items-start gap-4">
                     <div>
-                      <CardTitle className="text-lg group-hover:text-neutral-200 transition-colors">
+                      <CardTitle className="text-lg transition-colors group-hover:text-foreground">
                         {complaint.title}
                       </CardTitle>
                       <CardDescription className="mt-1 flex items-center gap-3">
                         <span>#{complaint.complaint_id}</span>
-                        <span>•</span>
-                        <span>{new Date(complaint.date_filed || complaint.created_at || Date.now()).toLocaleDateString()}</span>
+                        <span>|</span>
+                        <span>{formatComplaintDate(complaint.date_filed || complaint.created_at)}</span>
                       </CardDescription>
                     </div>
                     <div className="flex gap-2 flex-wrap justify-end">
@@ -149,3 +157,4 @@ export default function DashboardPage() {
     </div>
   );
 }
+

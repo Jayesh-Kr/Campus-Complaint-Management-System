@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useCallback, useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import api from "@/lib/api";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -13,14 +13,45 @@ import { ArrowLeft, Loader2, MessageSquare, Send, CheckCircle } from "lucide-rea
 import Link from "next/link";
 import { formatStatus, getPriorityBadgeVariant, getStatusBadgeVariant } from "@/lib/helpers";
 
+interface ComplaintResponse {
+  created_at?: string;
+  date_responded?: string;
+  id?: number;
+  message: string;
+  response_id?: number;
+  staff_id?: number | null;
+}
+
+interface StaffMember {
+  department?: string;
+  name: string;
+  staff_id: number;
+}
+
+interface ComplaintRecord {
+  assigned_staff?: string | null;
+  category?: { name: string } | string | null;
+  category_id?: number;
+  complaint_id?: number;
+  created_at?: string;
+  date_filed?: string;
+  description: string;
+  priority: string;
+  staff_id?: number | null;
+  status: string;
+  student_id: number;
+  title: string;
+}
+
 export default function ComplaintDetailPage() {
+  const themedSelectClass = "flex h-9 w-full rounded-md border border-border bg-card px-3 py-1 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
   const { id } = useParams();
-  const router = useRouter();
   const { user } = useAuth();
   
-  const [complaint, setComplaint] = useState<any>(null);
-  const [responses, setResponses] = useState<any[]>([]);
-  const [staffList, setStaffList] = useState<any[]>([]);
+  const [complaint, setComplaint] = useState<ComplaintRecord | null>(null);
+  const [responses, setResponses] = useState<ComplaintResponse[]>([]);
+  const [staffList, setStaffList] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   
   // Forms state
@@ -30,7 +61,7 @@ export default function ComplaintDetailPage() {
   const [feedbackRating, setFeedbackRating] = useState("5");
   const [feedbackMessage, setFeedbackMessage] = useState("");
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [compRes, respRes] = await Promise.all([
@@ -51,13 +82,13 @@ export default function ComplaintDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id, user?.role]);
 
   useEffect(() => {
     if (id && user) {
-      fetchData();
+      void fetchData();
     }
-  }, [id, user]);
+  }, [id, user, fetchData]);
 
   const handleSendReply = async () => {
     if (!replyMessage.trim()) return;
@@ -113,7 +144,7 @@ export default function ComplaintDetailPage() {
   if (loading || !complaint) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-neutral-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -122,7 +153,7 @@ export default function ComplaintDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
-      <Link href="/dashboard" className="inline-flex items-center text-sm text-neutral-400 hover:text-neutral-50 transition-colors">
+      <Link href="/dashboard" className="inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Dashboard
       </Link>
@@ -149,8 +180,8 @@ export default function ComplaintDetailPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <h3 className="font-medium text-sm text-neutral-400 mb-2">Description</h3>
-              <p className="whitespace-pre-wrap text-neutral-200">{complaint.description}</p>
+              <h3 className="mb-2 text-sm font-medium text-muted-foreground">Description</h3>
+              <p className="whitespace-pre-wrap text-foreground">{complaint.description}</p>
             </CardContent>
           </Card>
 
@@ -163,27 +194,27 @@ export default function ComplaintDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4">
               {responses.length === 0 ? (
-                <p className="text-sm text-neutral-500 italic">No responses yet.</p>
+                <p className="text-sm italic text-muted-foreground">No responses yet.</p>
               ) : (
                 <div className="space-y-4">
-                  {responses.map((resp: any) => (
-                    <div key={resp.response_id || resp.id} className={`p-4 rounded-lg flex flex-col ${resp.staff_id ? 'bg-neutral-800/50' : 'bg-neutral-900/40'}`}>
+                  {responses.map((resp) => (
+                    <div key={resp.response_id || resp.id} className={`flex flex-col rounded-lg p-4 ${resp.staff_id ? "bg-secondary" : "bg-muted"}`}>
                       <div className="flex justify-between items-start mb-2">
-                        <span className="font-medium text-sm text-neutral-300">
+                        <span className="text-sm font-medium text-foreground">
                           {resp.staff_id ? 'Staff/Admin' : 'Student'}
                         </span>
-                        <span className="text-xs text-neutral-500">
+                        <span className="text-xs text-muted-foreground">
                           {new Date(resp.date_responded || resp.created_at).toLocaleString()}
                         </span>
                       </div>
-                      <p className="text-sm text-neutral-200 whitespace-pre-wrap">{resp.message}</p>
+                      <p className="text-sm whitespace-pre-wrap text-foreground">{resp.message}</p>
                     </div>
                   ))}
                 </div>
               )}
 
               {!isResolved && (
-                <div className="mt-4 pt-4 border-t border-neutral-800 flex gap-2">
+                <div className="mt-4 flex gap-2 border-t border-border pt-4">
                   <Textarea 
                     placeholder="Type a response..."
                     value={replyMessage}
@@ -199,9 +230,9 @@ export default function ComplaintDetailPage() {
           </Card>
 
           {isResolved && user?.role === 'student' && (
-            <Card className="border-emerald-900/30 bg-emerald-950/10">
+            <Card className="border-success-border bg-success-bg">
               <CardHeader>
-                <CardTitle className="text-lg flex items-center gap-2 text-emerald-400">
+                <CardTitle className="flex items-center gap-2 text-lg text-success-foreground">
                   <CheckCircle className="w-5 h-5" />
                   Provide Feedback
                 </CardTitle>
@@ -211,7 +242,7 @@ export default function ComplaintDetailPage() {
                   <div className="space-y-2">
                     <Label>Rating (1-5)</Label>
                     <select 
-                      className="flex h-9 w-full rounded-md border border-neutral-800 bg-[#141414] px-3 py-1 text-sm shadow-sm"
+                      className={themedSelectClass}
                       value={feedbackRating}
                       onChange={(e) => setFeedbackRating(e.target.value)}
                     >
@@ -243,21 +274,25 @@ export default function ComplaintDetailPage() {
             </CardHeader>
             <CardContent className="space-y-4 text-sm">
               <div>
-                <span className="text-neutral-500 block mb-1">Student ID</span>
-                <span className="font-medium text-neutral-200">#{complaint.student_id}</span>
+                <span className="mb-1 block text-muted-foreground">Student ID</span>
+                <span className="font-medium text-foreground">#{complaint.student_id}</span>
               </div>
               <div>
-                <span className="text-neutral-500 block mb-1">Category</span>
-                <span className="font-medium text-neutral-200">{complaint.category?.name || complaint.category || `ID: ${complaint.category_id}`}</span>
+                <span className="mb-1 block text-muted-foreground">Category</span>
+                <span className="font-medium text-foreground">
+                  {typeof complaint.category === "object" && complaint.category !== null
+                    ? complaint.category.name
+                    : complaint.category || `ID: ${complaint.category_id}`}
+                </span>
               </div>
               <div>
-                <span className="text-neutral-500 block mb-1">Assigned Staff</span>
+                <span className="mb-1 block text-muted-foreground">Assigned Staff</span>
                 {complaint.staff_id || complaint.assigned_staff ? (
-                  <span className="font-medium text-neutral-200">
+                  <span className="font-medium text-foreground">
                     {complaint.assigned_staff || `Staff ID: #${complaint.staff_id}`}
                   </span>
                 ) : (
-                  <span className="text-neutral-500 italic">Unassigned</span>
+                  <span className="italic text-muted-foreground">Unassigned</span>
                 )}
               </div>
             </CardContent>
@@ -273,7 +308,7 @@ export default function ComplaintDetailPage() {
                   <Label>Update Status</Label>
                   <div className="flex gap-2">
                     <select 
-                      className="flex h-9 w-full rounded-md border border-neutral-800 bg-[#141414] px-3 py-1 text-sm shadow-sm"
+                      className={themedSelectClass}
                       value={statusUpdate}
                       onChange={(e) => setStatusUpdate(e.target.value)}
                     >
@@ -289,11 +324,11 @@ export default function ComplaintDetailPage() {
                 </div>
 
                 {user.role === 'admin' && (
-                  <div className="space-y-3 pt-4 border-t border-neutral-800">
+                  <div className="space-y-3 border-t border-border pt-4">
                     <Label>Assign Staff</Label>
                     <div className="flex gap-2">
                       <select 
-                        className="flex h-9 w-full rounded-md border border-neutral-800 bg-[#141414] px-3 py-1 text-sm shadow-sm"
+                        className={themedSelectClass}
                         value={assignStaffId}
                         onChange={(e) => setAssignStaffId(e.target.value)}
                       >

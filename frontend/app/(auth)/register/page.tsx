@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import { useAuth } from "@/context/AuthContext";
@@ -12,6 +12,11 @@ import Link from "next/link";
 import { AlertCircle } from "lucide-react";
 
 export default function RegisterPage() {
+  const roleToggleBaseClass = "flex-1 rounded-sm py-1.5 text-sm font-medium transition-colors";
+  const roleToggleActiveClass = "bg-card text-foreground shadow-sm";
+  const roleToggleInactiveClass = "text-muted-foreground hover:text-foreground";
+  const themedSelectClass = "flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
   const [roleMode, setRoleMode] = useState<"student" | "staff">("student");
   const [formData, setFormData] = useState({
     name: "",
@@ -99,16 +104,16 @@ export default function RegisterPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="flex bg-neutral-900 p-1 rounded-md mb-6">
+          <div className="mb-6 flex rounded-md bg-muted p-1">
             <button
               onClick={() => { setRoleMode("student"); setError(""); }}
-              className={`flex-1 py-1.5 text-sm font-medium rounded-sm transition-colors ${roleMode === "student" ? "bg-neutral-800 text-neutral-50 shadow" : "text-neutral-400 hover:text-neutral-200"}`}
+              className={`${roleToggleBaseClass} ${roleMode === "student" ? roleToggleActiveClass : roleToggleInactiveClass}`}
             >
               Student
             </button>
             <button
               onClick={() => { setRoleMode("staff"); setError(""); }}
-              className={`flex-1 py-1.5 text-sm font-medium rounded-sm transition-colors ${roleMode === "staff" ? "bg-neutral-800 text-neutral-50 shadow" : "text-neutral-400 hover:text-neutral-200"}`}
+              className={`${roleToggleBaseClass} ${roleMode === "staff" ? roleToggleActiveClass : roleToggleInactiveClass}`}
             >
               Staff / Admin
             </button>
@@ -116,7 +121,7 @@ export default function RegisterPage() {
 
           <form onSubmit={handleRegister} className="space-y-4">
             {error && (
-              <div className="p-3 text-sm bg-red-950/50 border border-red-900 rounded-md text-red-200 flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-md border border-error-border bg-error-bg p-3 text-sm text-error-foreground">
                 <AlertCircle className="w-4 h-4 shrink-0" />
                 {error}
               </div>
@@ -175,12 +180,12 @@ export default function RegisterPage() {
                 <Label htmlFor="role">Role</Label>
                 <select 
                   id="role"
-                  className="flex h-9 w-full rounded-md border border-neutral-800 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-400"
+                  className={themedSelectClass}
                   value={formData.role}
                   onChange={handleChange}
                 >
-                  <option value="staff" className="bg-[#141414]">Staff</option>
-                  <option value="admin" className="bg-[#141414]">Admin</option>
+                  <option value="staff" className="bg-card text-card-foreground">Staff</option>
+                  <option value="admin" className="bg-card text-card-foreground">Admin</option>
                 </select>
               </div>
             )}
@@ -190,7 +195,7 @@ export default function RegisterPage() {
               <Input 
                 id="password" 
                 type="password" 
-                placeholder="••••••••"
+                placeholder="Create a password"
                 value={formData.password}
                 onChange={handleChange}
                 required
@@ -203,10 +208,10 @@ export default function RegisterPage() {
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex justify-center border-t border-neutral-800 pt-6">
-          <p className="text-sm text-neutral-400">
+        <CardFooter className="flex justify-center border-t border-border pt-6">
+          <p className="text-sm text-muted-foreground">
             Already have an account?{" "}
-            <Link href="/login" className="text-neutral-50 hover:underline font-medium">
+            <Link href="/login" className="font-medium text-foreground hover:underline">
               Sign in
             </Link>
           </p>
@@ -215,3 +220,4 @@ export default function RegisterPage() {
     </div>
   );
 }
+

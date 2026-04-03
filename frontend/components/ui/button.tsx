@@ -12,13 +12,13 @@ const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         className={cn(
-          "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-400 disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
           {
-            "bg-neutral-100 text-neutral-900 shadow hover:bg-neutral-200": variant === "default",
-            "border border-neutral-800 bg-transparent shadow-sm hover:bg-neutral-800 hover:text-neutral-50": variant === "outline",
-            "hover:bg-neutral-800 hover:text-neutral-50": variant === "ghost",
-            "bg-neutral-800 text-neutral-50 shadow-sm hover:bg-neutral-800/80": variant === "secondary",
-            "bg-red-900 text-neutral-50 shadow-sm hover:bg-red-900/90": variant === "destructive",
+            "bg-primary text-primary-foreground shadow-sm hover:opacity-90": variant === "default",
+            "border border-border bg-transparent shadow-sm hover:bg-accent hover:text-accent-foreground": variant === "outline",
+            "hover:bg-accent hover:text-accent-foreground": variant === "ghost",
+            "bg-secondary text-secondary-foreground shadow-sm hover:opacity-90": variant === "secondary",
+            "bg-destructive text-destructive-foreground shadow-sm hover:opacity-90": variant === "destructive",
             "h-9 px-4 py-2": size === "default",
             "h-8 rounded-md px-3 text-xs": size === "sm",
             "h-10 rounded-md px-8": size === "lg",

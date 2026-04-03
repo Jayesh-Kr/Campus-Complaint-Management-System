@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import Script from "next/script";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/context/AuthContext";
+import { ThemeProvider } from "@/context/ThemeContext";
 import { Navbar } from "@/components/Navbar";
+import { THEME_SCRIPT } from "@/lib/theme";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,7 +19,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Campus Complaint System",
-  description: "Minimal dark modern complaint management system",
+  description: "A modern campus complaint management system with light and dark themes.",
 };
 
 export default function RootLayout({
@@ -27,15 +30,25 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased dark`}
+      suppressHydrationWarning
+      data-theme="dark"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col bg-[#0a0a0a] text-neutral-50">
-        <AuthProvider>
-          <Navbar />
-          <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8">
-            {children}
-          </main>
-        </AuthProvider>
+      <body
+        suppressHydrationWarning
+        className="min-h-full flex flex-col bg-background text-foreground"
+      >
+        <Script id="theme-script" strategy="beforeInteractive">
+          {THEME_SCRIPT}
+        </Script>
+        <ThemeProvider>
+          <AuthProvider>
+            <Navbar />
+            <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-8">
+              {children}
+            </main>
+          </AuthProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

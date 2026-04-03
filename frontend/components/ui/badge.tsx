@@ -9,14 +9,14 @@ function Badge({ className, variant = "default", ...props }: BadgeProps) {
   return (
     <div
       className={cn(
-        "inline-flex items-center rounded-sm border border-neutral-800 px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-400 focus:ring-offset-2",
+        "inline-flex items-center rounded-sm border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
         {
-          "border-transparent bg-neutral-100 text-neutral-900 shadow hover:bg-neutral-200": variant === "default",
-          "border-transparent bg-neutral-800 text-neutral-100 hover:bg-neutral-700": variant === "secondary",
-          "border-transparent bg-red-900 text-neutral-100 hover:bg-red-800": variant === "destructive",
-          "text-neutral-50": variant === "outline",
-          "border-transparent bg-emerald-900/40 text-emerald-400 hover:bg-emerald-900/60": variant === "success",
-          "border-transparent bg-amber-900/40 text-amber-400 hover:bg-amber-900/60": variant === "warning",
+          "border-transparent bg-primary text-primary-foreground shadow": variant === "default",
+          "border-transparent bg-secondary text-secondary-foreground": variant === "secondary",
+          "border-transparent bg-destructive text-destructive-foreground": variant === "destructive",
+          "border-border text-foreground": variant === "outline",
+          "border-success-border bg-success-bg text-success-foreground": variant === "success",
+          "border-warning-border bg-warning-bg text-warning-foreground": variant === "warning",
         },
         className
       )}

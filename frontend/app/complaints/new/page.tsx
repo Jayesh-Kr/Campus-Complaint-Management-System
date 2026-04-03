@@ -12,11 +12,18 @@ import { Textarea } from "@/components/ui/textarea";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
+interface Category {
+  category_id: number;
+  name: string;
+}
+
 export default function NewComplaintPage() {
+  const themedSelectClass = "flex h-9 w-full rounded-md border border-border bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+
   const { user } = useAuth();
   const router = useRouter();
   
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -52,8 +59,15 @@ export default function NewComplaintPage() {
         staff_id: null,
       });
       router.push("/dashboard");
-    } catch (err: any) {
-      setError(err.response?.data?.message || "Failed to submit complaint.");
+    } catch (err: unknown) {
+      const responseMessage =
+        typeof err === "object" &&
+        err !== null &&
+        "response" in err &&
+        typeof (err as { response?: { data?: { message?: string } } }).response?.data?.message === "string"
+          ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+          : undefined;
+      setError(responseMessage || "Failed to submit complaint.");
     } finally {
       setLoading(false);
     }
@@ -65,7 +79,7 @@ export default function NewComplaintPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <Link href="/dashboard" className="inline-flex items-center text-sm text-neutral-400 hover:text-neutral-50 transition-colors">
+      <Link href="/dashboard" className="inline-flex items-center text-sm text-muted-foreground transition-colors hover:text-foreground">
         <ArrowLeft className="w-4 h-4 mr-2" />
         Back to Dashboard
       </Link>
@@ -80,7 +94,7 @@ export default function NewComplaintPage() {
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             {error && (
-              <div className="p-3 text-sm bg-red-950/50 border border-red-900 rounded-md text-red-200 flex items-center gap-2">
+              <div className="flex items-center gap-2 rounded-md border border-error-border bg-error-bg p-3 text-sm text-error-foreground">
                 <AlertCircle className="w-4 h-4" />
                 {error}
               </div>
@@ -114,14 +128,14 @@ export default function NewComplaintPage() {
                 <Label htmlFor="category_id">Category</Label>
                 <select 
                   id="category_id"
-                  className="flex h-9 w-full rounded-md border border-neutral-800 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-400"
+                  className={themedSelectClass}
                   value={formData.category_id}
                   onChange={handleChange}
                   required
                 >
-                  <option value="" className="bg-[#141414]">Select Category</option>
+                  <option value="" className="bg-card text-card-foreground">Select Category</option>
                   {categories.map(cat => (
-                    <option key={cat.category_id} value={cat.category_id} className="bg-[#141414]">{cat.name}</option>
+                    <option key={cat.category_id} value={cat.category_id} className="bg-card text-card-foreground">{cat.name}</option>
                   ))}
                 </select>
               </div>
@@ -130,20 +144,20 @@ export default function NewComplaintPage() {
                 <Label htmlFor="priority">Priority</Label>
                 <select 
                   id="priority"
-                  className="flex h-9 w-full rounded-md border border-neutral-800 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-neutral-400"
+                  className={themedSelectClass}
                   value={formData.priority}
                   onChange={handleChange}
                   required
                 >
-                  <option value="low" className="bg-[#141414]">Low</option>
-                  <option value="medium" className="bg-[#141414]">Medium</option>
-                  <option value="high" className="bg-[#141414]">High</option>
-                  <option value="critical" className="bg-[#141414]">Critical</option>
+                  <option value="low" className="bg-card text-card-foreground">Low</option>
+                  <option value="medium" className="bg-card text-card-foreground">Medium</option>
+                  <option value="high" className="bg-card text-card-foreground">High</option>
+                  <option value="critical" className="bg-card text-card-foreground">Critical</option>
                 </select>
               </div>
             </div>
           </CardContent>
-          <CardFooter className="flex justify-end gap-3 border-t border-neutral-800 pt-6">
+          <CardFooter className="flex justify-end gap-3 border-t border-border pt-6">
             <Link href="/dashboard">
               <Button variant="outline" type="button">Cancel</Button>
             </Link>

@@ -90,7 +90,7 @@ export default function ReportsPage() {
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
-        <Loader2 className="w-8 h-8 animate-spin text-neutral-500" />
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -109,35 +109,35 @@ export default function ReportsPage() {
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">System Reports</h1>
-        <p className="text-neutral-400 mt-1">Analytics and overview of platform operations.</p>
+        <p className="mt-1 text-muted-foreground">Analytics and overview of platform operations.</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-neutral-400">Total Open</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Open</CardTitle>
             <AlertOctagon className="w-4 h-4 text-amber-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalOpen}</div>
-            <p className="text-xs text-neutral-500 mt-1">Pending action</p>
+            <p className="mt-1 text-xs text-muted-foreground">Pending action</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-neutral-400">Total Resolved</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Total Resolved</CardTitle>
             <CheckCircle2 className="w-4 h-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalResolved}</div>
-            <p className="text-xs text-neutral-500 mt-1">Successfully handled</p>
+            <p className="mt-1 text-xs text-muted-foreground">Successfully handled</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-neutral-400">Avg Resolution</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Avg Resolution</CardTitle>
             <Clock className="w-4 h-4 text-blue-500" />
           </CardHeader>
           <CardContent>
@@ -146,18 +146,18 @@ export default function ReportsPage() {
                 ? `${Number(stats.avgTime.avg_days_to_resolve).toFixed(1)} days`
                 : 'N/A'}
             </div>
-            <p className="text-xs text-neutral-500 mt-1">From open to closed</p>
+            <p className="mt-1 text-xs text-muted-foreground">From open to closed</p>
           </CardContent>
         </Card>
         
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-            <CardTitle className="text-sm font-medium text-neutral-400">Staff Active</CardTitle>
+            <CardTitle className="text-sm font-medium text-muted-foreground">Staff Active</CardTitle>
             <Users className="w-4 h-4 text-purple-500" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{stats?.staff?.length || 0}</div>
-            <p className="text-xs text-neutral-500 mt-1">Managing complaints</p>
+            <p className="mt-1 text-xs text-muted-foreground">Managing complaints</p>
           </CardContent>
         </Card>
       </div>
@@ -171,8 +171,8 @@ export default function ReportsPage() {
             <div className="space-y-4">
               {stats?.status?.map((item, i: number) => (
                 <div key={i} className="flex items-center justify-between">
-                  <span className="text-sm capitalize text-neutral-300">{item.status?.replace('_', ' ')}</span>
-                  <span className="font-medium text-sm px-2 py-1 bg-neutral-800 rounded-md">
+                  <span className="text-sm capitalize text-foreground">{item.status?.replace('_', ' ')}</span>
+                  <span className="rounded-md bg-muted px-2 py-1 text-sm font-medium text-foreground">
                     {item.count || item.total || item.total_complaints || 0}
                   </span>
                 </div>
@@ -188,16 +188,16 @@ export default function ReportsPage() {
           <CardContent>
             <div className="space-y-4">
               {stats?.staff?.slice(0, 5).map((staff, i: number) => (
-                <div key={i} className="flex items-center justify-between border-b border-neutral-800 pb-2 last:border-0 last:pb-0">
+                <div key={i} className="flex items-center justify-between border-b border-border pb-2 last:border-0 last:pb-0">
                   <div>
-                    <p className="text-sm font-medium text-neutral-200">{staff.staff_name || staff.name || `Staff #${staff.staff_id}`}</p>
-                    <p className="text-xs text-neutral-500">Resolved: {staff.resolved_count || 0}</p>
+                    <p className="text-sm font-medium text-foreground">{staff.staff_name || staff.name || `Staff #${staff.staff_id}`}</p>
+                    <p className="text-xs text-muted-foreground">Resolved: {staff.resolved_count || 0}</p>
                   </div>
-                  <TrendingUp className="w-4 h-4 text-neutral-600" />
+                  <TrendingUp className="h-4 w-4 text-muted-foreground" />
                 </div>
               ))}
               {(!stats?.staff || stats.staff.length === 0) && (
-                <p className="text-sm text-neutral-500 italic">No performance data available yet.</p>
+                <p className="text-sm italic text-muted-foreground">No performance data available yet.</p>
               )}
             </div>
           </CardContent>
@@ -212,20 +212,20 @@ export default function ReportsPage() {
           <div className="space-y-3">
             {stats?.open?.length ? (
               stats.open.map((item) => (
-                <div key={item.complaint_id} className="rounded-md border border-neutral-800 p-3">
+                <div key={item.complaint_id} className="rounded-md border border-border p-3">
                   <div className="flex items-center justify-between gap-4">
-                    <p className="text-sm font-medium text-neutral-200">
+                    <p className="text-sm font-medium text-foreground">
                       #{item.complaint_id} {item.title}
                     </p>
-                    <span className="text-xs text-neutral-400">{item.status}</span>
+                    <span className="text-xs text-muted-foreground">{item.status}</span>
                   </div>
-                  <p className="mt-1 text-xs text-neutral-500">
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {item.category} | {item.student_name} | Assigned: {item.assigned_to}
                   </p>
                 </div>
               ))
             ) : (
-              <p className="text-sm text-neutral-500 italic">No open complaints right now.</p>
+              <p className="text-sm italic text-muted-foreground">No open complaints right now.</p>
             )}
           </div>
         </CardContent>

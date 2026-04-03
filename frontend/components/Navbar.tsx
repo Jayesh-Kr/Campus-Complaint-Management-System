@@ -4,24 +4,25 @@ import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
+import { ThemeToggle } from "./ThemeToggle";
 
 export function Navbar() {
-  const { user, logout } = useAuth();
+  const { user, logout, loading } = useAuth();
 
   return (
-    <nav className="border-b border-neutral-800 bg-[#0a0a0a]/50 backdrop-blur-md sticky top-0 z-50">
+    <nav className="sticky top-0 z-50 border-b border-border bg-background/90 backdrop-blur-md">
       <div className="max-w-7xl mx-auto px-4 md:px-8 h-16 flex items-center justify-between">
         <div className="flex items-center gap-6">
-          <Link href="/" className="font-semibold text-lg tracking-tight text-neutral-100">
+          <Link href="/" className="font-semibold text-lg tracking-tight text-foreground">
             Campus Desk
           </Link>
-          {user && (
-            <div className="hidden md:flex items-center gap-4 text-sm font-medium text-neutral-400">
-              <Link href="/dashboard" className="hover:text-neutral-50 transition-colors">
+          {user && !loading && (
+            <div className="hidden md:flex items-center gap-4 text-sm font-medium text-muted-foreground">
+              <Link href="/dashboard" className="transition-colors hover:text-foreground">
                 Dashboard
               </Link>
               {user.role === 'admin' || user.role === 'staff' ? (
-                <Link href="/reports" className="hover:text-neutral-50 transition-colors">
+                <Link href="/reports" className="transition-colors hover:text-foreground">
                   Reports
                 </Link>
               ) : null}
@@ -30,13 +31,14 @@ export function Navbar() {
         </div>
         
         <div className="flex items-center gap-4">
-          {user ? (
+          <ThemeToggle />
+          {user && !loading ? (
             <>
               <div className="text-sm hidden sm:block">
-                <span className="text-neutral-400">Signed in as </span>
-                <span className="font-medium text-neutral-200">{user.name}</span>
+                <span className="text-muted-foreground">Signed in as </span>
+                <span className="font-medium text-foreground">{user.name}</span>
               </div>
-              <Button variant="ghost" size="sm" onClick={logout} className="text-neutral-400 hover:text-red-400">
+              <Button variant="ghost" size="sm" onClick={logout} className="text-muted-foreground hover:text-destructive">
                 <LogOut className="w-4 h-4 mr-2" />
                 Logout
               </Button>
